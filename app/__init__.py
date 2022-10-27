@@ -5,7 +5,6 @@ from flask_migrate import Migrate
 db = SQLAlchemy()
 migrate = Migrate()
 
-
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -17,7 +16,7 @@ def create_app(test_config=None):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    from routes.planet import planet_bp
+    from app.routes.planet import planet_bp
     app.register_blueprint(planet_bp)
 
     return app
