@@ -1,14 +1,14 @@
 from flask import Blueprint, jsonify
 
-class Planet:
-    def __init__(self,id, name, description, moons = None):
-        self.id = id
-        self.name = name
-        self.description = description
-        if moons is None:
-            self.moons = []
-        else:
-            self.moons = moons
+# class Planet:
+#     def __init__(self,id, name, description, moons = None):
+#         self.id = id
+#         self.name = name
+#         self.description = description
+#         if moons is None:
+#             self.moons = []
+#         else:
+#             self.moons = moons
 
 
 home = Planet(4, 'Earth','A pale blue dot.',["earth's moon"])
