@@ -1,27 +1,25 @@
 from urllib import response
-from flask import Blueprint, jsonify, make_response, request
+from flask import Blueprint, jsonify, make_response, request, abort
 from app import db
+from app.models import planet
 from app.models.planet import Planet
 
 
-# class Planet:
-#     def __init__(self,id, name, description, moons = None):
-#         self.id = id
-#         self.name = name
-#         self.description = description
-#         if moons is None:
-#             self.moons = []
-#         else:
-#             self.moons = moons
-
-
-# home = Planet(4, 'Earth','A pale blue dot.',["earth's moon"])
-# mars = Planet(3, 'Mars','A smaller red planet')
-# jupiter = Planet(5, 'Jupiter', 'A gas giant',['Europa','Ganymede', 'Calysto'])
-
-
-# planets_list = [home, mars, jupiter]
 planet_bp = Blueprint("planet_bp", __name__, url_prefix="/planet")
+
+def validate_planet_id(planet_id):
+    try:
+        planet_id = int(planet_id)
+    except ValueError:
+        abort(make_response(jsonify({"message": "planet_id must be an integer"}),400))
+    
+    matching_planet = Planet.query.get(planet_id)
+
+    if matching_planet is None:
+        response_str = f"Planet with id {planet_id} was not found in the database."
+        abort(make_response(jsonify({"Message": response_str}), 404))
+
+    return matching_planet
 
 @planet_bp.route("", methods = ["POST"])
 def add_planet():
@@ -49,20 +47,36 @@ def get_all_planets():
         response.append(planet_dict)
     return jsonify(response)
 
-# @planet_bp.route("/<planet_id>", methods = ["GET"])
-# def get_one_planet(planet_id):
-#     try:
-#         planet_id = int(planet_id)
-#     except ValueError:
-#         return {"message": "planet_id must be an integer"},400
-    
-#     for planet in planets_list:
-#         if planet_id == planet.id:
-#             return {
-#             "id": planet.id,
-#             "name": planet.name,
-#             "description":planet.description,
-#             "moons":planet.moons
-#         },200
 
-#     return {"message": f"{planet_id} not found in planets list."}, 404
+@planet_bp.route("/<planet_id>", methods = ["GET"])
+def get_one_planet(planet_id):
+    chosen_planet = validate_planet_id(planet_id)
+    return jsonify({
+        "id": chosen_planet.id,
+        "name": chosen_planet.name,
+        "description":chosen_planet.description,
+        "moons":chosen_planet.moons
+    }),200
+
+@planet_bp.route("/<planet_id>", methods = ["PUT"])
+def update_planet(planet_id):
+    chosen_planet = validate_planet_id(planet_id)
+    request_body = request.get_json()
+    
+    if "name" not in request_body or "description" not in request_body\
+        or "moons" not in request_body:
+            return jsonify({"message": "Request must include name, description, and moons."}), 400
+    
+    chosen_planet.name = request_body["name"]
+    chosen_planet.description = request_body["description"]
+    chosen_planet.moons = request_body["moons"]
+    
+    db.session.commit()
+    return make_response(f"Planet #{chosen_planet.id} successfully updated",200)
+
+@planet_bp.route("/<planet_id>", methods = ["DELETE"])
+def delete_one_planet(planet_id):
+    chosen_planet = validate_planet_id(planet_id)
+    db.session.delete(chosen_planet)
+    db.session.commit()
+    return f'Planet #{planet_id} has been deleted',200
