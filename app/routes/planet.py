@@ -35,8 +35,21 @@ def add_planet():
 
 @planet_bp.route("", methods = ["GET"])
 def get_all_planets():
+    name_param = request.args.get("name")
+    description_param = request.args.get("description")
+    moons_param = request.args.get("moons")
+
+    if name_param:
+        planets = Planet.query.filter_by(name =name_param)
+    elif description_param:
+        planets = Planet.query.filter_by(description =description_param)
+    elif moons_param:
+        planets = Planet.query.filter_by(moons =moons_param)
+    else:
+        planets = Planet.query.all()
+     
+    
     response = []
-    planets = Planet.query.all()
     for planet in planets:
         planet_dict = {
             "id": planet.id,
@@ -63,16 +76,17 @@ def update_planet(planet_id):
     chosen_planet = validate_planet_id(planet_id)
     request_body = request.get_json()
     
-    if "name" not in request_body or "description" not in request_body\
-        or "moons" not in request_body:
-            return jsonify({"message": "Request must include name, description, and moons."}), 400
-    
-    chosen_planet.name = request_body["name"]
-    chosen_planet.description = request_body["description"]
-    chosen_planet.moons = request_body["moons"]
+    if "name" in request_body:
+        chosen_planet.name = request_body["name"]
+    if "description" in request_body :
+        chosen_planet.description = request_body["description"]
+    if "moons" in request_body:
+        chosen_planet.moons = request_body["moons"]
+
+            # return jsonify({"message": "Request must include name, description, and moons."}), 400
     
     db.session.commit()
-    return make_response(f"Planet #{chosen_planet.id} successfully updated",200)
+    return f"Planet #{chosen_planet.id} successfully updated",200
 
 @planet_bp.route("/<planet_id>", methods = ["DELETE"])
 def delete_one_planet(planet_id):
