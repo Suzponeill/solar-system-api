@@ -1,5 +1,5 @@
 from urllib import response
-from flask import Blueprint, jsonify, make_response, request, abort
+from flask import Blueprint, jsonify, make_response, request, abort,Response
 from app import db
 from app.models import planet
 from app.models.planet import Planet
@@ -17,7 +17,7 @@ def validate_planet_id(planet_id):
 
     if matching_planet is None:
         response_str = f"Planet with id {planet_id} was not found in the database."
-        abort(make_response(jsonify({"Message": response_str}), 404))
+        abort(make_response(jsonify({"message": response_str}), 404))
 
     return matching_planet
 
@@ -47,7 +47,6 @@ def get_all_planets():
         planets = Planet.query.filter_by(moons =moons_param)
     else:
         planets = Planet.query.all()
-     
     
     response = []
     for planet in planets:
